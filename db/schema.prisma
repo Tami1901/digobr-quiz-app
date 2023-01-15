@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["extendedWhereUnique"]
+}
+
+// --------------------------------------
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  email     String   @unique
+
+  solutions     QuestionSolution[]
+  groups        Group[]
+  createdGroups Group[]            @relation("createdGroups")
+
+  role           String    @default("USER")
+  hashedPassword String
+  tokens         Token[]
+  sessions       Session[]
+}
+
+model Question {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  question String
+  category String
+  ans1     String
+  ans2     String
+  ans3     String
+  ans4     String
+
+  groups    Group[]
+  solutions QuestionSolution[]
+}
+
+model Group {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   User     @relation("createdGroups", fields: [createdById], references: [id])
+  createdById Int
+
+  name      String
+  users     User[]
+  questions Question[]
+  solutions QuestionSolution[]
+}
+
+model QuestionSolution {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  answerIndex Int
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  question    Question @relation(fields: [questionId], references: [id])
+  questionId  Int
+  group       Group    @relation(fields: [groupId], references: [id])
+  groupId     Int
+
+  @@unique([userId, questionId, groupId])
+}
+
+model Session {
+  id                 Int       @id @default(autoincrement())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  expiresAt          DateTime?
+  handle             String    @unique
+  hashedSessionToken String?
+  antiCSRFToken      String?
+  publicData         String?
+  privateData        String?
+
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int?
+}
+
+enum TokenType {
+  RESET_PASSWORD
+}
+
+model Token {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  hashedToken String
+  type        TokenType
+  expiresAt   DateTime
+  sentTo      String
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  @@unique([hashedToken, type])
+}
