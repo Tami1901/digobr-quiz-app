@@ -25,11 +25,14 @@ import {
   useDisclosure,
 } from "@chakra-ui/react"
 import getGroups from "src/groups/queries/getGroups"
-import { DeleteIcon, EditIcon, MinusIcon, ViewIcon } from "@chakra-ui/icons"
+import { DeleteIcon, EditIcon, ExternalLinkIcon, MinusIcon, ViewIcon } from "@chakra-ui/icons"
 import { useConfirm } from "chakra-confirm"
 import kickUser from "src/groups/mutations/kickUser"
 import { LinkButton } from "chakra-next-link"
 import deleteGroupFn from "src/groups/mutations/deleteGroup"
+
+const mailto = (slug: string) =>
+  `mailto:name@gmail.com?body=Hi,I'm inviting you to join my quiz group on http://localhost:3000/. This is a join code:${slug}.`
 
 const UserInfo = () => {
   const [logoutMutation] = useMutation(logout)
@@ -85,7 +88,12 @@ const UserInfo = () => {
             {groups.map((g) => (
               <Tr key={g.id}>
                 <Td>{g.name}</Td>
-                <Td>{g.slug}</Td>
+                <Td>
+                  <LinkButton href={mailto(g.slug)} colorScheme="gray">
+                    {g.slug}
+                    <ExternalLinkIcon ml="4" />
+                  </LinkButton>
+                </Td>
                 <Td>
                   <List spacing={4}>
                     {g.users.map((u) => (
