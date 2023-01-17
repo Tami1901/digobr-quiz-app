@@ -6,6 +6,28 @@ import dynamic from "next/dynamic"
 import getGroup from "src/groups/queries/getGroup"
 
 const Radar = dynamic(() => import("react-chartjs-2").then((a) => a.Radar), { ssr: false })
+export const calcScores = (gu) => {
+  return Object.entries(
+    gu.solutions.reduce((acc, solution) => {
+      if (!acc[solution.question.category]) {
+        acc[solution.question.category] = []
+      }
+
+      acc[solution.question.category].push(solution.answerIndex === 0 ? 1 : 0)
+
+      return acc
+    }, {})
+  )
+    .map(([category, scores]: any) => {
+      let sc = [...scores]
+      if (sc.length < 5) {
+        sc = [...sc, ...Array(5 - sc.length).fill(0)]
+      }
+
+      return [category, (scores.reduce((a, b) => a + b, 0) / scores.length) * 100]
+    })
+    .sort((a, b) => b[1] - a[1])
+}
 
 import {
   Chart as ChartJS,
@@ -24,6 +46,7 @@ import {
   Heading,
   HStack,
   IconButton,
+  ListItem,
   OrderedList,
   Table,
   Tbody,
@@ -31,10 +54,13 @@ import {
   Th,
   Thead,
   Tr,
+  UnorderedList,
   VStack,
 } from "@chakra-ui/react"
 import { ArrowDownIcon, ArrowUpIcon, DownloadIcon } from "@chakra-ui/icons"
 import Head from "next/head"
+import { T } from "@blitzjs/auth/dist/index-ced88017"
+import { CATEGORIES } from "src/questions/categories"
 
 if (typeof window !== "undefined") {
   ChartJS.register(
@@ -79,54 +105,32 @@ const generateColor = (user: { id: number; name: string }, opacity?: string) => 
 const GroupPage = () => {
   const router = useRouter()
   const groupId = useParam("groupId", "number")!
-  const [group, { refetch }] = useQuery(getGroup, { id: groupId })
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [rawGroups, { refetch }] = useQuery(getGroup, { id: groupId })
 
-  //   const data = useMemo(() => {
-  //     const userData = group.solutions.reduce<Record<string, Record<string, number>>>(
-  //       (obj, solution) => {
-  //         if (!obj[`${solution.userId}-${solution.user.name}`]) {
-  //           obj[`${solution.userId}-${solution.user.name}`] = {}
-  //         }
-  //
-  //         if (!obj[`${solution.userId}-${solution.user.name}`]![solution.question.category]) {
-  //           obj[`${solution.userId}-${solution.user.name}`]![solution.question.category] = 0
-  //         }
-  //
-  //         obj[`${solution.userId}-${solution.user.name}`]![solution.question.category] +=
-  //           solution.answerIndex === 0 ? 1 : 0
-  //         return obj
-  //       },
-  //       {}
-  //     )
-  //
-  //     const labels = group.solutions
-  //       .map((s) => s.question.category)
-  //       .flatMap((c) => c.split(" "))
-  //       .reduce<string[]>((arr, c) => (arr.includes(c) ? arr : [...arr, c]), [])
-  //       .sort((a, b) => a.localeCompare(b))
-  //
-  //     const datasets: any[] = []
-  //     Object.keys(userData).forEach((userId) => {
-  //       const [id, name] = userId.split("-")
-  //       const user = group.users.find((u) => u.id === Number(id))
-  //       if (!user) return
-  //
-  //       datasets.push({
-  //         label: name,
-  //         data: labels.map((l) => userData[userId]?.[l] || 0),
-  //         fill: true,
-  //         backgroundColor: generateColor(user, "0.2"),
-  //         borderColor: generateColor(user),
-  //         pointBackgroundColor: generateColor(user),
-  //         pointBorderColor: "#fff",
-  //         pointHoverBackgroundColor: "#fff",
-  //         pointHoverBorderColor: generateColor(user),
-  //       })
-  //     })
-  //
-  //     return { labels, datasets }
-  //   }, [group])
+  const groupWithScores = useMemo(() => {
+    return {
+      ...rawGroups,
+      groupUsers: rawGroups.groupUsers.map((gu) => ({ ...gu, scores: calcScores(gu) })),
+    }
+  }, [rawGroups])
+
+  const data = useMemo(() => {
+    const datasets = groupWithScores.groupUsers.map((gu) => {
+      return {
+        label: gu.user.name,
+        data: CATEGORIES.map((c) => gu.scores.find((s) => s[0] === c)?.[1] || 0),
+        fill: true,
+        backgroundColor: generateColor(gu.user, "0.2"),
+        borderColor: generateColor(gu.user),
+        pointBackgroundColor: generateColor(gu.user),
+        pointBorderColor: "#fff",
+        pointHoverBackgroundColor: "#fff",
+        pointHoverBorderColor: generateColor(gu.user),
+      }
+    })
+
+    return { labels: CATEGORIES, datasets }
+  }, [groupWithScores])
 
   const size = "500px"
 
@@ -137,60 +141,49 @@ const GroupPage = () => {
           <Heading size="sm" color="gray.600" mb="2">
             Group:{" "}
           </Heading>
-          <Heading pb={10}>{group.name}</Heading>
+          <Heading pb={10}>{groupWithScores.name}</Heading>
           <HStack mb="6">
             <Heading size="sm" color="gray.600">
-              Members:{" "}
+              Members:
             </Heading>
-            {isExpanded ? (
-              <Button onClick={() => setIsExpanded(false)} aria-label="Collapse" size="xs">
-                Show less
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setIsExpanded(true)}
-                aria-label="Expand"
-                size="xs"
-                colorScheme="orange"
-              >
-                Show all data
-              </Button>
-            )}
           </HStack>
-          {/* {group.users.map((user) => (
-            <VStack key={user.id} alignItems="flex-start">
-              <HStack pb={6}>
-                <Heading size="md"> - {user.name}</Heading>
-              </HStack>
-              {isExpanded && (
-                <Table variant="simple">
-                  <Thead>
-                    <Tr>
-                      <Th>Category</Th>
-                      <Th>Question</Th>
-                      <Th>Answer</Th>
-                      <Th>T/F</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {group.solutions
-                      .filter((s) => s.userId === user.id)
-                      .map((s) => (
-                        <Tr key={s.id}>
-                          <Td> {s.question.category}</Td>
-                          <Td>{s.question.question}</Td>
-                          <Td>{s.question.ans1}</Td>
-                          <Td> {s.answerIndex === 0 ? "✅" : "❌"}</Td>
-                        </Tr>
-                      ))}
-                  </Tbody>
-                </Table>
-              )}
-            </VStack>
-          ))} */}
+
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>ID</Th>
+                <Th>Name</Th>
+                <Th>Score</Th>
+                <Th>Best category</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {groupWithScores.groupUsers.map((gu, index) => {
+                return (
+                  <Tr key={gu.id}>
+                    <Td>{index}</Td>
+                    <Td>{gu.user.name}</Td>
+                    <Td>
+                      <UnorderedList>
+                        {gu.scores.map(([category, score]) => (
+                          <ListItem key={category}>
+                            {category}: {score.toFixed(2)}%
+                          </ListItem>
+                        ))}
+                      </UnorderedList>
+                    </Td>
+
+                    <Td>
+                      {gu.scores[0]?.[0]}: {(gu.scores[0]?.[1] as any)?.toFixed(2)}%
+                    </Td>
+                  </Tr>
+                )
+              })}
+            </Tbody>
+          </Table>
         </Box>
         <Box>
-          {/* <Radar
+          <Radar
             data={data}
             height={size}
             width={size}
@@ -204,12 +197,13 @@ const GroupPage = () => {
                   suggestedMax: 2,
                   ticks: {
                     // forces step size to be 50 units
-                    stepSize: 1,
+                    stepSize: 10,
+                    display: false,
                   },
                 },
               },
             }}
-          /> */}
+          />
         </Box>
       </Box>
     </Layout>

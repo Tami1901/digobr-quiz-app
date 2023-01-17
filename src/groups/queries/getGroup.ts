@@ -21,6 +21,13 @@ const getGroup = resolver.pipe(
                 name: true,
               },
             },
+            solutions: {
+              include: {
+                question: {
+                  select: { category: true },
+                },
+              },
+            },
           },
         },
       },

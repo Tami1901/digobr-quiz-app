@@ -21,7 +21,12 @@ import { Category } from "src/core/components/Category"
 import { ExplainModal } from "src/core/components/ExplainModal"
 import Layout from "src/core/layouts/Layout"
 import getQuestionsToSolve from "src/groups/queries/getQuestionsToSolve"
-import { categoriesColors, categoriesImages, categoriesLabels } from "src/questions/categories"
+import {
+  CATEGORIES,
+  categoriesColors,
+  categoriesImages,
+  categoriesLabels,
+} from "src/questions/categories"
 import explainAnswerFn from "src/questions/mutations/explainAnswer"
 import solveQuestionFn from "src/questions/mutations/solveQuestion"
 
@@ -126,12 +131,12 @@ const Quiz: BlitzPage = () => {
           justifyContent="space-around"
           ml="10"
         >
-          {Object.entries(categoriesColors).map((c, i) => (
+          {CATEGORIES.map((c, i) => (
             <Category
-              key={c[0]}
-              name={categoriesLabels[c[0]]}
+              key={c}
+              name={categoriesLabels[c]}
               // color={c[1]}
-              isSelect={c[0] === solution.question.category}
+              isSelect={c === solution.question.category}
               isFirst={i === 0}
               isLast={i === 4}
             />

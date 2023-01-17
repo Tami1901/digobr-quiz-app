@@ -9,7 +9,13 @@ export const categoryMap = {
   Sports: "SportsAndCelebrities",
 }
 
-export const CATEGORIES = Object.values(categoryMap)
+export const CATEGORIES = [
+  "Entertainment",
+  "General",
+  "GeoHistoryPolitics",
+  "Other",
+  "SportsAndCelebrities",
+]
 export const categoriesColors = {
   GeoHistoryPolitics: "gray",
   General: "orange",

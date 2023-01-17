@@ -19,12 +19,12 @@ const getQuestionsToSolve = resolver.pipe(
           },
           orderBy: [
             {
-              id: "asc",
-            },
-            {
               question: {
                 category: "asc",
               },
+            },
+            {
+              id: "asc",
             },
           ],
         },

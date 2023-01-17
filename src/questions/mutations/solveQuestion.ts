@@ -81,11 +81,25 @@ const solveQuestionFn = resolver.pipe(
       })
     }
 
-    const isLastQuestion = groupUser.solutions.every(
-      (s) => s.answerIndex !== null || s.questionId === questionId
-    )
+    await db.questionSolution.update({
+      where: { id: solution.id },
+      data: {
+        answerIndex,
+      },
+    })
 
-    if (isLastQuestion) {
+    const allSolved = (
+      await db.questionSolution.findMany({
+        where: {
+          groupUser: {
+            userId: ctx.session.userId,
+            groupId,
+          },
+        },
+      })
+    ).every((s) => s.answerIndex !== null)
+
+    if (allSolved) {
       await db.groupUser.update({
         where: { userId_groupId: { userId: ctx.session.userId, groupId } },
         data: {
@@ -93,13 +107,6 @@ const solveQuestionFn = resolver.pipe(
         },
       })
     }
-
-    await db.questionSolution.update({
-      where: { id: solution.id },
-      data: {
-        answerIndex,
-      },
-    })
 
     return answerIndex === 0
   }
