@@ -1,6 +1,6 @@
 import { useParam, BlitzPage } from "@blitzjs/next"
 import { useMutation, useQuery } from "@blitzjs/rpc"
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons"
+import { ChevronLeftIcon, ChevronRightIcon, QuestionIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
@@ -19,42 +19,56 @@ import { useEffect, useMemo, useState } from "react"
 import { Category } from "src/core/components/Category"
 import Layout from "src/core/layouts/Layout"
 import getQuestionsToSolve from "src/groups/queries/getQuestionsToSolve"
+import { categoriesColors } from "src/questions/categories"
 import explainAnswerFn from "src/questions/mutations/explainAnswer"
 import solveQuestionFn from "src/questions/mutations/solveQuestion"
 
+const randomWithSeed = (seed: string) => {
+  const numberSeed = seed
+    .split("")
+    .map((c) => c.charCodeAt(0))
+    .reduce((a, b) => a + b, 0)
+
+  const x = Math.sin(numberSeed) * 10000
+  return x - Math.floor(x)
+}
+
 const Quiz: BlitzPage = () => {
   const groupId = useParam("groupId", "number")!
-  const [questions, { refetch }] = useQuery(getQuestionsToSolve, { groupId })
-  const [index, setIndex] = useState(questions.filter((q) => q.solutions.length !== 0).length)
-  const [explanation, setExplanation] = useState<undefined | string>(undefined)
-  const router = useRouter()
-  const question = questions[index]
-
-  useEffect(() => {
-    if (!question) {
-      void router.push(`/`)
-    }
-  }, [question, router])
-
-  const answers = useMemo(
-    () =>
-      [
-        { text: question?.ans1, index: 0 },
-        { text: question?.ans2, index: 1 },
-        { text: question?.ans3, index: 2 },
-        { text: question?.ans4, index: 3 },
-      ].sort(() => Math.random() - 0.5),
-    [question]
+  const [groupUser, { refetch }] = useQuery(getQuestionsToSolve, { groupId })
+  const [index, setIndex] = useState(
+    groupUser.solutions.filter((sol) => sol.answerIndex !== null).length
   )
 
+  const [userAnswer, setUserAnswer] = useState<undefined | number>(undefined)
+  const [explanation, setExplanation] = useState<undefined | string>(undefined)
   const [solve] = useMutation(solveQuestionFn)
   const [explain] = useMutation(explainAnswerFn)
 
+  const solution = groupUser.solutions[index]
+  const answers = useMemo(() => {
+    if (!solution) {
+      return []
+    }
+
+    return [
+      { text: solution.question.ans1, index: 0, order: randomWithSeed(solution.question.ans1) },
+      { text: solution.question.ans2, index: 1, order: randomWithSeed(solution.question.ans2) },
+      { text: solution.question.ans3, index: 2, order: randomWithSeed(solution.question.ans3) },
+      { text: solution.question.ans4, index: 3, order: randomWithSeed(solution.question.ans4) },
+    ].sort((a, b) => a.order - b.order)
+  }, [solution])
+
+  if (!solution) {
+    return <h1>Solution not found</h1>
+  }
+
   const onSolve = (answerIndex: number) => async () => {
-    // await solve({ answerIndex, questionId: question!.id, groupId })
+    // const response = await solve({ answerIndex, questionId: solution.questionId, groupId })
+    setUserAnswer(answerIndex)
     // await refetch()
 
-    setExplanation(await explain({ answerIndex, questionId: question!.id }))
+    // setExplanation(await explain({ answerIndex, questionId: solution!.id }))
     // if (index === questions.length - 1) {
     //   await router.push(`/`)
     // } else {
@@ -62,8 +76,25 @@ const Quiz: BlitzPage = () => {
     // }
   }
 
-  if (!question) {
-    return null
+  const onNext = () => {
+    setUserAnswer(undefined)
+  }
+
+  const isAnswered = userAnswer !== undefined
+  const getColor = (index: number) => {
+    if (userAnswer === undefined) {
+      return undefined
+    }
+
+    if (index === 0) {
+      return "green"
+    }
+
+    if (index === userAnswer) {
+      return "red"
+    }
+
+    return undefined
   }
 
   return (
@@ -90,14 +121,19 @@ const Quiz: BlitzPage = () => {
           justifyContent="space-around"
           ml="10"
         >
-          <Category name="History" color="gray" isFirst={true} />
-          <Category name="Art" color="orange" isSelect />
-          <Category name="Sport" color="blue" />
-          <Category name="Movies" color="teal" />
-          <Category name="Books" color="purple" isLast={true} />
+          {Object.entries(categoriesColors).map((c, i) => (
+            <Category
+              key={c[0]}
+              name={c[0]}
+              color={c[1]}
+              isSelect={c[0] === solution.question.category}
+              isFirst={i === 0}
+              isLast={i === 4}
+            />
+          ))}
         </Box>
         <Box
-          key={question.id}
+          key={solution.id}
           width="80%"
           backgroundColor="white"
           marginLeft="4"
@@ -132,14 +168,30 @@ const Quiz: BlitzPage = () => {
           </HStack> */}
 
           <Heading maxW="80%" textAlign="center" size="xl" mb="10">
-            {index + 1}. {question.question}{" "}
+            <>
+              {index + 1}. {solution.question.question}{" "}
+            </>
           </Heading>
           {[0, 1].map((i) => (
             <HStack key={i} spacing="10" mb="10" w="100%" px={20}>
-              <Button onClick={onSolve(answers[i * 2 + 0]!.index)} py="10" w="100%">
+              <Button
+                onClick={onSolve(answers[i * 2 + 0]!.index)}
+                py="10"
+                w="100%"
+                colorScheme={getColor(answers[i * 2 + 0]!.index)}
+                disabled={isAnswered}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+              >
                 {answers[i * 2 + 0]!.text}
               </Button>
-              <Button onClick={onSolve(answers[i * 2 + 1]!.index)} py="10" w="100%">
+              <Button
+                onClick={onSolve(answers[i * 2 + 1]!.index)}
+                py="10"
+                w="100%"
+                colorScheme={getColor(answers[i * 2 + 1]!.index)}
+                disabled={isAnswered}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+              >
                 {answers[i * 2 + 1]!.text}
               </Button>
             </HStack>
@@ -148,12 +200,12 @@ const Quiz: BlitzPage = () => {
             <Button
               onClick={() => explain({ answerIndex: 0, questionId: 2 })}
               colorScheme="yellow"
-              disabled={explanation === undefined}
+              disabled={!isAnswered}
               px="20"
             >
               Explain me!
             </Button>
-            <LinkButton colorScheme="blue" px="20">
+            <LinkButton colorScheme="blue" px="20" disabled={!isAnswered}>
               Next
             </LinkButton>
           </Box>

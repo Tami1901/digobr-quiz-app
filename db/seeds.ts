@@ -1,17 +1,7 @@
 import { SecurePassword } from "@blitzjs/auth"
 import axios from "axios"
+import { categoryMap } from "src/questions/categories"
 import db from "./index"
-
-const categoryMap = {
-  History: "GeoHistoryPolitics",
-  Geography: "GeoHistoryPolitics",
-  Politics: "GeoHistoryPolitics",
-  Science: "General",
-  General: "General",
-  Entertainment: "Entertainment",
-  Celebrities: "SportsAndCelebrities",
-  Sports: "SportsAndCelebrities",
-}
 
 const seed = async () => {
   const hashedPassword = await SecurePassword.hash("foobar123")

@@ -75,12 +75,27 @@ const solveQuestionFn = resolver.pipe(
       })
     }
 
+    const isLastQuestion = groupUser.solutions.every(
+      (s) => s.answerIndex !== null || s.questionId === questionId
+    )
+
+    if (isLastQuestion) {
+      await db.groupUser.update({
+        where: { userId_groupId: { userId: ctx.session.userId, groupId } },
+        data: {
+          quizSolved: true,
+        },
+      })
+    }
+
     await db.questionSolution.update({
       where: { id: solution.id },
       data: {
         answerIndex,
       },
     })
+
+    return answerIndex === 0
   }
 )
 
