@@ -26,7 +26,6 @@ export const Category = ({
         borderTopLeftRadius={isFirst ? "2xl" : ""}
         borderBottomLeftRadius={isLast ? "2xl" : ""}
         px={!isSelect ? "40px" : ""}
-        py={isSelect ? "4" : ""}
         minW="260px"
         backgroundColor={isSelect ? `${color}.200` : "white"}
       >
