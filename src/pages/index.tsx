@@ -97,7 +97,7 @@ const UserInfo = () => {
                   <Td>
                     <List spacing={4}>
                       {g.groupUsers.map((gu) => (
-                        <ListItem key={gu.id}>{gu.user.id}</ListItem>
+                        <ListItem key={gu.id}>{gu.user.name}</ListItem>
                       ))}
                     </List>
                   </Td>

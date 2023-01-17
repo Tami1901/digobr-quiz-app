@@ -19,6 +19,7 @@ import {
   ModalOverlay,
   Spinner,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react"
 import { useCurrentUser } from "src/users/hooks/useCurrentUser"
 import { invalidateQuery, useMutation } from "@blitzjs/rpc"
@@ -31,6 +32,8 @@ import { group } from "console"
 import getGroups from "src/groups/queries/getGroups"
 import joinGroupFn from "src/groups/mutations/joinGroup"
 import { Link } from "chakra-next-link"
+import { useConfirm, usePrompt } from "chakra-confirm"
+import { NotFoundError } from "blitz"
 
 const User = () => {
   const currentUser = useCurrentUser()
@@ -70,13 +73,60 @@ const Layout: BlitzLayout<{
   const { isOpen: isOpenJoin, onOpen: onOpenJoin, onClose: onCloseJoin } = useDisclosure()
 
   const router = useRouter()
+  const confirm = useConfirm()
+  const prompt = usePrompt()
+  const toast = useToast()
+
+  const joinGroup = async () => {
+    const isJoin = await prompt({
+      title: "Join group",
+      buttonText: "Join",
+      buttonColor: "green",
+    })
+    if (isJoin === null) return
+
+    try {
+      await joinGroupMutation({ slug: isJoin })
+      await invalidateQuery(getGroups)
+      onCloseJoin()
+    } catch (error: any) {
+      if (error instanceof NotFoundError) {
+        toast({
+          title: "Group not found",
+          status: "error",
+        })
+      }
+    }
+  }
+
+  const createGroup = async () => {
+    const isCreate = await prompt({
+      title: "Create group",
+      buttonText: "Create",
+      buttonColor: "blue",
+    })
+    if (isCreate === null) return
+
+    try {
+      await createGroupMutation({ name: isCreate })
+      await invalidateQuery(getGroups)
+      onClose()
+    } catch (error: any) {
+      if (error instanceof NotFoundError) {
+        toast({
+          title: "Group not created",
+          status: "error",
+        })
+      }
+    }
+  }
 
   return (
     <Box w="100%" h="100vh" backgroundColor="white">
       <Box
         w="100%"
         display="flex"
-        py={6}
+        py={4}
         px={20}
         // mb={removeMarginTop ? undefined : "16"}
         shadow="base"
@@ -91,8 +141,8 @@ const Layout: BlitzLayout<{
         <HStack spacing={4}>
           {router.pathname === "/" && (
             <>
-              <Button onClick={onOpenJoin}>Join group</Button>
-              <Button onClick={onOpen} colorScheme="purple">
+              <Button onClick={joinGroup}>Join group</Button>
+              <Button onClick={createGroup} colorScheme="purple">
                 Create group
               </Button>
             </>
@@ -104,73 +154,6 @@ const Layout: BlitzLayout<{
         </HStack>
       </Box>
       {children}
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Create group</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Box py="4" px="10" margin="0 auto" width="fit-content">
-              <Form
-                initialValues={{ name: "" }}
-                onSubmit={async (values) => {
-                  try {
-                    await createGroupMutation({ name: values.name })
-                    await invalidateQuery(getGroups)
-                    onClose()
-                    // await router.push(Routes.Home())
-                  } catch (error: any) {}
-                }}
-              >
-                <LabeledTextField name="name" label="Name" placeholder="Name" />
-
-                <Button type="submit" width="100%" colorScheme="blue" mt="6">
-                  Create Group
-                </Button>
-              </Form>
-            </Box>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button mr={3} onClick={onClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Modal isOpen={isOpenJoin} onClose={onCloseJoin}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Join group</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Box py="4" px="10" margin="0 auto" width="fit-content">
-              <Form
-                initialValues={{ slug: "" }}
-                onSubmit={async (values) => {
-                  try {
-                    await joinGroupMutation({ slug: values.slug })
-                    await invalidateQuery(getGroups)
-                    onCloseJoin()
-                  } catch (error: any) {}
-                }}
-              >
-                <LabeledTextField name="slug" label="Slug" placeholder="Slug" />
-
-                <Button type="submit" width="100%" colorScheme="blue" mt="6">
-                  Join Group
-                </Button>
-              </Form>
-            </Box>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button mr={3} onClick={onCloseJoin}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </Box>
   )
 }

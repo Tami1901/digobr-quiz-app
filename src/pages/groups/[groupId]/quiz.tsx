@@ -108,7 +108,7 @@ const Quiz: BlitzPage = () => {
         backgroundSize="cover"
         backgroundRepeat="no-repeat"
         justifyContent="center"
-        minHeight="calc(100vh - 96px)"
+        minHeight="calc(100vh - 80px)"
         height="calc(100vh - 96px)"
         alignItems="center"
         position={"relative"}
@@ -206,7 +206,11 @@ const Quiz: BlitzPage = () => {
               onClick={async () => {
                 onOpen()
                 setExplanation(
-                  await explain({ answerIndex: userAnswer!, questionId: solution!.question.id })
+                  await explain({
+                    answerIndex: userAnswer!,
+                    questionId: solution!.question.id,
+                    answers,
+                  })
                 )
               }}
               colorScheme="yellow"

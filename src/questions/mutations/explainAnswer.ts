@@ -13,12 +13,13 @@ const openai = new OpenAIApi(configuration)
 export const explainQuestionSchema = z.object({
   questionId: z.number(),
   answerIndex: z.number(),
+  answers: z.array(z.object({ text: z.string(), index: z.number(), order: z.number() })),
 })
 
 const explainAnswerFn = resolver.pipe(
   resolver.zod(explainQuestionSchema),
   resolver.authorize(),
-  async ({ questionId, answerIndex }, ctx) => {
+  async ({ questionId, answerIndex, answers }, ctx) => {
     const question = await db.question.findUnique({
       where: { id: questionId },
     })
@@ -29,7 +30,7 @@ const explainAnswerFn = resolver.pipe(
 
     const isCorrect = answerIndex === 0
 
-    console.log("ansOfUsera")
+    console.log(answers)
 
     const a = `Why is the answer ${question[`ans${answerIndex + 1}`]} ${
       isCorrect ? "correct" : "wrong"
@@ -43,7 +44,7 @@ const explainAnswerFn = resolver.pipe(
         }, explain why is it wrong and why is a correct
 
         ${question.question}
-        a) ${question.ans1}
+        a) ${answers}
         b) ${question.ans2}
         c) ${question.ans3}
         d) ${question.ans4}`,
