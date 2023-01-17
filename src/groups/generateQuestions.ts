@@ -4,11 +4,21 @@ type GenerateRandomQuestionsArgs = {
   difficulty?: Difficulty
   take?: number
   ignoreIds?: number[]
+  /**
+   * Defaults to true
+   */
+  isInitial?: boolean
   singleCategory?: string | null
 }
 
 export const generateRandomQuestions = async (args: GenerateRandomQuestionsArgs) => {
-  const { difficulty = "EASY", take = 2, ignoreIds = [], singleCategory = null } = args
+  const {
+    difficulty = "EASY",
+    take = 2,
+    ignoreIds = [],
+    singleCategory = null,
+    isInitial = true,
+  } = args
 
   let categories: string[] = [singleCategory!]
   if (singleCategory === null) {
@@ -30,7 +40,7 @@ export const generateRandomQuestions = async (args: GenerateRandomQuestionsArgs)
 
   return {
     create: questionIds.map((qObj) => ({
-      isInitial: true,
+      isInitial,
       question: { connect: qObj },
     })),
   } // satisfies Prisma.QuestionSolutionCreateNestedManyWithoutGroupUserInput

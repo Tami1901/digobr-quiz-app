@@ -39,15 +39,13 @@ const Quiz: BlitzPage = () => {
   const groupId = useParam("groupId", "number")!
   const [groupUser, { refetch }] = useQuery(getQuestionsToSolve, { groupId })
   const [index, setIndex] = useState(
-    groupUser.solutions.filter((sol) => sol.answerIndex !== null).length + 4
+    groupUser.solutions.filter((sol) => sol.answerIndex !== null).length
   )
   const { isOpen, onOpen, onClose } = useDisclosure()
 
-  console.log(groupUser.solutions.map((s) => s.id))
-
   const [userAnswer, setUserAnswer] = useState<undefined | number>(undefined)
   const [explanation, setExplanation] = useState<undefined | string>(undefined)
-  const [solve] = useMutation(solveQuestionFn)
+  const [solve, { isLoading: isSolving }] = useMutation(solveQuestionFn)
   const [explain, { isLoading }] = useMutation(explainAnswerFn)
 
   const solution = groupUser.solutions[index]
@@ -69,7 +67,7 @@ const Quiz: BlitzPage = () => {
   }
 
   const onSolve = (answerIndex: number) => async () => {
-    const response = await solve({ answerIndex, questionId: solution.questionId, groupId })
+    await solve({ answerIndex, questionId: solution.questionId, groupId })
     setUserAnswer(answerIndex)
     await refetch()
   }
@@ -100,8 +98,6 @@ const Quiz: BlitzPage = () => {
 
     return undefined
   }
-
-  console.log(explanation)
 
   return (
     <Layout>
@@ -172,7 +168,7 @@ const Quiz: BlitzPage = () => {
                   w="100%"
                   wordBreak="break-all"
                   colorScheme={getColor(answers[i * 2 + 0]!.index)}
-                  disabled={isAnswered}
+                  disabled={isAnswered || isSolving}
                   _disabled={{ opacity: 1, cursor: "not-allowed" }}
                   position="relative"
                   maxW="100%"
@@ -182,21 +178,25 @@ const Quiz: BlitzPage = () => {
                   <Box position="absolute" left="4">
                     {i === 0 ? `a)` : `c)`}
                   </Box>
-                  {answers[i * 2 + 0]!.text}
+                  <Text>{answers[i * 2 + 0]!.text}</Text>
                 </Button>
                 <Button
                   onClick={onSolve(answers[i * 2 + 1]!.index)}
                   py="10"
+                  maxW="100%"
                   w="100%"
                   colorScheme={getColor(answers[i * 2 + 1]!.index)}
-                  disabled={isAnswered}
+                  disabled={isAnswered || isSolving}
                   _disabled={{ opacity: 1, cursor: "not-allowed" }}
                   position="relative"
+                  wordBreak="break-word"
                 >
                   <Box position="absolute" left="4">
                     {i === 0 ? `b)` : `d)`}
                   </Box>
-                  {answers[i * 2 + 1]!.text}
+                  <Text w="100%" wordBreak="break-all">
+                    {answers[i * 2 + 1]!.text}
+                  </Text>
                 </Button>
               </HStack>
             ))}

@@ -60,9 +60,10 @@ const solveQuestionFn = resolver.pipe(
         Object.entries(scoreToNewQuestions[scoreOnInit as 0 | 1 | 2]).map(
           async ([difficulty, take]) => {
             return await generateRandomQuestions({
-              ignoreIds: initialQuestionsOfThisCategory.map((q) => q.id),
+              ignoreIds: groupUser.solutions.map((s) => s.question.id),
               singleCategory: solution.question.category,
               difficulty: difficulty as Difficulty,
+              isInitial: false,
               take,
             })
           }
