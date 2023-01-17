@@ -70,7 +70,7 @@ const UserInfo = () => {
 
   if (!currentUser) return null
   return (
-    <Box px={16} width="100%">
+    <Box px={16} width="100%" mt="10">
       <TableContainer>
         <Table variant="simple">
           <TableCaption>My groups</TableCaption>

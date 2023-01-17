@@ -78,7 +78,7 @@ const Layout: BlitzLayout<{
         display="flex"
         py={6}
         px={20}
-        mb={removeMarginTop ? undefined : "16"}
+        // mb={removeMarginTop ? undefined : "16"}
         shadow="base"
         justifyContent="space-between"
       >
@@ -103,7 +103,6 @@ const Layout: BlitzLayout<{
           </Suspense>
         </HStack>
       </Box>
-
       {children}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
