@@ -115,7 +115,10 @@ const Quiz: BlitzPage = () => {
         minHeight="calc(100vh - 96px)"
         height="calc(100vh - 96px)"
         alignItems="center"
+        position={"relative"}
+        overflow="hidden"
       >
+        {/* <Box position="absolute" opacity="0.6" left="0" top="0" width="100%" height="auto"></Box> */}
         <Box
           backgroundColor="white"
           height="70vh"
@@ -167,10 +170,14 @@ const Quiz: BlitzPage = () => {
                   onClick={onSolve(answers[i * 2 + 0]!.index)}
                   py="10"
                   w="100%"
+                  wordBreak="break-all"
                   colorScheme={getColor(answers[i * 2 + 0]!.index)}
                   disabled={isAnswered}
                   _disabled={{ opacity: 1, cursor: "not-allowed" }}
                   position="relative"
+                  maxW="100%"
+                  whiteSpace="normal"
+                  px="10"
                 >
                   <Box position="absolute" left="4">
                     {i === 0 ? `a)` : `c)`}
