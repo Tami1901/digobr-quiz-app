@@ -11,25 +11,13 @@ const getGroup = resolver.pipe(
   resolver.authorize(),
   async ({ id }, ctx) => {
     return await db.group.findUniqueOrThrow({
-      where: { id, users: { some: { id: ctx.session.userId } } },
+      where: { id, groupUsers: { some: { userId: ctx.session.userId } } },
       include: {
-        users: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        solutions: {
+        groupUsers: {
           include: {
-            question: {
-              select: {
-                category: true,
-                question: true,
-                ans1: true,
-              },
-            },
             user: {
               select: {
+                id: true,
                 name: true,
               },
             },

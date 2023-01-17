@@ -15,7 +15,7 @@ const deleteGroupFn = resolver.pipe(
     }
 
     await db.$transaction([
-      db.questionSolution.deleteMany({ where: { groupId: id } }),
+      db.questionSolution.deleteMany({ where: { groupUser: { groupId: id } } }),
       db.group.delete({ where: { id } }),
     ])
   }

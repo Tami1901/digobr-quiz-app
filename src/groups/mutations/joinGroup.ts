@@ -3,6 +3,7 @@ import { resolver } from "@blitzjs/rpc"
 import { z } from "zod"
 
 import db from "db"
+import { generateRandomQuestions } from "../generateQuestions"
 
 export const joinGroupSchema = z.object({ slug: z.string() })
 
@@ -17,7 +18,14 @@ const joinGroupFn = resolver.pipe(
 
     await db.group.update({
       where: { id: group.id },
-      data: { users: { connect: { id: ctx.session.userId } } },
+      data: {
+        groupUsers: {
+          create: {
+            user: { connect: { id: ctx.session.userId } },
+            solutions: await generateRandomQuestions({}),
+          },
+        },
+      },
     })
 
     return true

@@ -6,7 +6,6 @@ import { useMutation, useQuery } from "@blitzjs/rpc"
 import { BlitzPage } from "@blitzjs/next"
 import {
   Box,
-  Text,
   HStack,
   IconButton,
   Table,
@@ -15,17 +14,15 @@ import {
   Tag,
   Tbody,
   Td,
-  Tfoot,
   Th,
   Thead,
   Tr,
-  ListIcon,
   ListItem,
   List,
   useDisclosure,
 } from "@chakra-ui/react"
 import getGroups from "src/groups/queries/getGroups"
-import { DeleteIcon, EditIcon, ExternalLinkIcon, MinusIcon, ViewIcon } from "@chakra-ui/icons"
+import { DeleteIcon, ExternalLinkIcon, MinusIcon } from "@chakra-ui/icons"
 import { useConfirm } from "chakra-confirm"
 import kickUser from "src/groups/mutations/kickUser"
 import { LinkButton } from "chakra-next-link"
@@ -85,44 +82,47 @@ const UserInfo = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {groups.map((g) => (
-              <Tr key={g.id}>
-                <Td>{g.name}</Td>
-                <Td>
-                  <LinkButton href={mailto(g.slug)} colorScheme="gray">
-                    {g.slug}
-                    <ExternalLinkIcon ml="4" />
-                  </LinkButton>
-                </Td>
-                <Td>
-                  <List spacing={4}>
-                    {g.users.map((u) => (
-                      <ListItem key={u.id}>{u.name}</ListItem>
-                    ))}
-                  </List>
-                </Td>
-                <Td>
-                  <Tag
-                    backgroundColor={g.createdById === currentUser.id ? "orange.200" : "gray.200"}
-                  >
-                    {g.createdById === currentUser.id ? "Admin" : "User"}
-                  </Tag>
-                </Td>
+            {groups.map((g) => {
+              const gu = g.groupUsers.find((s) => s.userId === currentUser.id)
 
-                <Td>
-                  {g.solutions.filter((s) => s.userId === currentUser.id).length % 20 === 0 ? (
-                    <LinkButton href={`/groups/${g.id}/quiz`} colorScheme="green">
-                      Start
+              return (
+                <Tr key={g.id}>
+                  <Td>{g.name}</Td>
+                  <Td>
+                    <LinkButton href={mailto(g.slug)} colorScheme="gray">
+                      {g.slug}
+                      <ExternalLinkIcon ml="4" />
                     </LinkButton>
-                  ) : (
-                    <LinkButton href={`/groups/${g.id}`} colorScheme="orange">
-                      Show results
-                    </LinkButton>
-                  )}
-                </Td>
-                <Td>
-                  <HStack>
-                    {/* <IconButton
+                  </Td>
+                  <Td>
+                    <List spacing={4}>
+                      {g.groupUsers.map((gu) => (
+                        <ListItem key={gu.id}>{gu.user.id}</ListItem>
+                      ))}
+                    </List>
+                  </Td>
+                  <Td>
+                    <Tag
+                      backgroundColor={g.createdById === currentUser.id ? "orange.200" : "gray.200"}
+                    >
+                      {g.createdById === currentUser.id ? "Admin" : "User"}
+                    </Tag>
+                  </Td>
+
+                  <Td>
+                    {!gu?.quizSolved ? (
+                      <LinkButton href={`/groups/${g.id}/quiz`} colorScheme="green">
+                        Start
+                      </LinkButton>
+                    ) : (
+                      <LinkButton href={`/groups/${g.id}`} colorScheme="orange">
+                        Show results
+                      </LinkButton>
+                    )}
+                  </Td>
+                  <Td>
+                    <HStack>
+                      {/* <IconButton
                       aria-label={"Edit group"}
                       colorScheme="blue"
                       size="sm"
@@ -130,29 +130,30 @@ const UserInfo = () => {
                     >
                       <EditIcon />
                     </IconButton> */}
-                    {g.createdById === currentUser.id ? (
-                      <IconButton
-                        aria-label={"Delete group"}
-                        colorScheme="red"
-                        size="sm"
-                        onClick={deleteGroup(g.id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    ) : (
-                      <IconButton
-                        aria-label={"Leave group"}
-                        colorScheme="red"
-                        size="sm"
-                        onClick={onLeave(g.id)}
-                      >
-                        <MinusIcon />
-                      </IconButton>
-                    )}
-                  </HStack>
-                </Td>
-              </Tr>
-            ))}
+                      {g.createdById === currentUser.id ? (
+                        <IconButton
+                          aria-label={"Delete group"}
+                          colorScheme="red"
+                          size="sm"
+                          onClick={deleteGroup(g.id)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      ) : (
+                        <IconButton
+                          aria-label={"Leave group"}
+                          colorScheme="red"
+                          size="sm"
+                          onClick={onLeave(g.id)}
+                        >
+                          <MinusIcon />
+                        </IconButton>
+                      )}
+                    </HStack>
+                  </Td>
+                </Tr>
+              )
+            })}
           </Tbody>
         </Table>
       </TableContainer>

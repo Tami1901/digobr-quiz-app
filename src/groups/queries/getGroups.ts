@@ -2,6 +2,7 @@ import { resolver } from "@blitzjs/rpc"
 import { z } from "zod"
 
 import db from "db"
+import { generateRandomQuestions } from "../generateQuestions"
 
 export const getGroupsSchema = z.void()
 
@@ -11,9 +12,9 @@ const getGroups = resolver.pipe(
   async (_, ctx) => {
     return db.group.findMany({
       where: {
-        users: {
+        groupUsers: {
           some: {
-            id: ctx.session.userId,
+            userId: ctx.session.userId,
           },
         },
       },
@@ -23,12 +24,7 @@ const getGroups = resolver.pipe(
             name: true,
           },
         },
-        users: true,
-        solutions: {
-          where: {
-            userId: ctx.session.userId,
-          },
-        },
+        groupUsers: { include: { user: { select: { id: true, name: true } } } },
       },
     })
   }

@@ -1,8 +1,9 @@
 import { resolver } from "@blitzjs/rpc"
 import { z } from "zod"
 
-import db from "db"
+import db, { Difficulty } from "db"
 import { NotFoundError } from "blitz"
+import { generateRandomQuestions } from "src/groups/generateQuestions"
 
 export const solveQuestionSchema = z.object({
   groupId: z.number(),
@@ -10,24 +11,74 @@ export const solveQuestionSchema = z.object({
   answerIndex: z.number(),
 })
 
+const scoreToNewQuestions = {
+  0: { EASY: 1 },
+  1: { MEDIUM: 1, EASY: 1 },
+  2: { MEDIUM: 2, HARD: 1 },
+}
+
 const solveQuestionFn = resolver.pipe(
   resolver.zod(solveQuestionSchema),
   resolver.authorize(),
   async ({ groupId, answerIndex, questionId }, ctx) => {
-    const group = await db.group.findUnique({
-      where: { id: groupId, users: { some: { id: ctx.session.userId } } },
+    const groupUser = await db.groupUser.findUnique({
+      where: { userId_groupId: { userId: ctx.session.userId, groupId } },
+      include: {
+        solutions: {
+          include: {
+            question: true,
+          },
+        },
+      },
     })
 
-    if (!group) {
-      throw new NotFoundError("Group not found")
+    const solution = groupUser?.solutions.find((s) => s.question.id === questionId)
+    if (!groupUser || !solution) {
+      throw new NotFoundError()
     }
 
-    await db.questionSolution.create({
+    if (solution.answerIndex !== null) {
+      return
+    }
+
+    const initialQuestionsOfThisCategory = groupUser.solutions.filter(
+      (s) => s.question.category === solution.question.category && s.isInitial
+    )
+
+    if (solution.isInitial && initialQuestionsOfThisCategory.every((s) => s.answerIndex !== null)) {
+      const scoreOnInit = initialQuestionsOfThisCategory.filter((s) => s.answerIndex === 0).length
+      if (scoreOnInit < 0 || scoreOnInit > 2) {
+        throw new Error("Invalid scoreOnInit")
+      }
+
+      const newCreateObj = await Promise.all(
+        Object.entries(scoreToNewQuestions[scoreOnInit as 0 | 1 | 2]).map(
+          async ([difficulty, take]) => {
+            return await generateRandomQuestions({
+              ignoreIds: initialQuestionsOfThisCategory.map((q) => q.id),
+              singleCategory: solution.question.category,
+              difficulty: difficulty as Difficulty,
+              take,
+            })
+          }
+        )
+      )
+
+      const mergedCreateObj = newCreateObj.flatMap((o) => o.create)
+      await db.groupUser.update({
+        where: { userId_groupId: { userId: ctx.session.userId, groupId } },
+        data: {
+          solutions: {
+            create: mergedCreateObj,
+          },
+        },
+      })
+    }
+
+    await db.questionSolution.update({
+      where: { id: solution.id },
       data: {
         answerIndex,
-        group: { connect: { id: groupId } },
-        question: { connect: { id: questionId } },
-        user: { connect: { id: ctx.session.userId } },
       },
     })
   }

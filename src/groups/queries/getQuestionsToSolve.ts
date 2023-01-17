@@ -9,20 +9,16 @@ const getQuestionsToSolve = resolver.pipe(
   resolver.zod(getQuestionsToSolveSchema),
   resolver.authorize(),
   async ({ groupId }, ctx) => {
-    const group = await db.group.findUniqueOrThrow({
-      where: { id: groupId, users: { some: { id: ctx.session.userId } } },
-      select: {
-        questions: {
+    return db.groupUser.findUnique({
+      where: { userId_groupId: { userId: ctx.session.userId, groupId } },
+      include: {
+        solutions: {
           include: {
-            solutions: {
-              where: { userId: ctx.session.userId, groupId },
-            },
+            question: true,
           },
         },
       },
     })
-
-    return group.questions
   }
 )
 

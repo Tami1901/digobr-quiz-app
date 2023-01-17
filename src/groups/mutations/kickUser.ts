@@ -20,8 +20,8 @@ const kickUserFn = resolver.pipe(
     }
 
     await db.$transaction([
-      db.questionSolution.deleteMany({ where: { groupId: id, userId: userId } }),
-      db.group.update({ where: { id }, data: { users: { disconnect: { id: userId } } } }),
+      db.questionSolution.deleteMany({ where: { groupUser: { groupId: id, userId } } }),
+      db.groupUser.delete({ where: { userId_groupId: { userId, groupId: id } } }),
     ])
   }
 )
