@@ -17,9 +17,16 @@ const getQuestionsToSolve = resolver.pipe(
           include: {
             question: true,
           },
-          orderBy: {
-            createdAt: "desc",
-          },
+          orderBy: [
+            {
+              id: "asc",
+            },
+            {
+              question: {
+                category: "asc",
+              },
+            },
+          ],
         },
       },
     })

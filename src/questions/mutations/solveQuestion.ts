@@ -45,7 +45,12 @@ const solveQuestionFn = resolver.pipe(
       (s) => s.question.category === solution.question.category && s.isInitial
     )
 
-    if (solution.isInitial && initialQuestionsOfThisCategory.every((s) => s.answerIndex !== null)) {
+    if (
+      solution.isInitial &&
+      initialQuestionsOfThisCategory.every(
+        (s) => s.answerIndex !== null || s.questionId === questionId
+      )
+    ) {
       const scoreOnInit = initialQuestionsOfThisCategory.filter((s) => s.answerIndex === 0).length
       if (scoreOnInit < 0 || scoreOnInit > 2) {
         throw new Error("Invalid scoreOnInit")

@@ -4,6 +4,6 @@ import { PrismaClient } from "@prisma/client"
 const EnhancedPrisma = enhancePrisma(PrismaClient)
 
 export * from "@prisma/client"
-const db = new EnhancedPrisma({ log: ["info", "query"] })
+const db = new EnhancedPrisma({})
 
 export default db

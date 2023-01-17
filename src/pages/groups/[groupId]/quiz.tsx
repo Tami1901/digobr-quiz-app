@@ -43,6 +43,8 @@ const Quiz: BlitzPage = () => {
   )
   const { isOpen, onOpen, onClose } = useDisclosure()
 
+  console.log(groupUser.solutions.map((s) => s.id))
+
   const [userAnswer, setUserAnswer] = useState<undefined | number>(undefined)
   const [explanation, setExplanation] = useState<undefined | string>(undefined)
   const [solve] = useMutation(solveQuestionFn)
@@ -67,19 +69,19 @@ const Quiz: BlitzPage = () => {
   }
 
   const onSolve = (answerIndex: number) => async () => {
-    // const response = await solve({ answerIndex, questionId: solution.questionId, groupId })
+    const response = await solve({ answerIndex, questionId: solution.questionId, groupId })
     setUserAnswer(answerIndex)
-    // await refetch()
-
-    // if (index === questions.length - 1) {
-    //   await router.push(`/`)
-    // } else {
-    //   setIndex(index + 1)
-    // }
+    await refetch()
   }
 
-  const onNext = () => {
+  const onNext = async () => {
     setUserAnswer(undefined)
+
+    if (index === groupUser.solutions.length - 1) {
+      await router.push(`/`)
+    } else {
+      setIndex(index + 1)
+    }
   }
 
   const isAnswered = userAnswer !== undefined
@@ -206,9 +208,9 @@ const Quiz: BlitzPage = () => {
             >
               Explain me!
             </Button>
-            <LinkButton colorScheme="blue" px="20" disabled={!isAnswered}>
+            <Button colorScheme="blue" px="20" disabled={!isAnswered} onClick={onNext}>
               Next
-            </LinkButton>
+            </Button>
           </Box>
         </Box>
       </Box>
