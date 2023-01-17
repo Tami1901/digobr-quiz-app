@@ -49,6 +49,7 @@ import {
   ListItem,
   OrderedList,
   Table,
+  Tag,
   Tbody,
   Td,
   Th,
@@ -136,7 +137,7 @@ const GroupPage = () => {
 
   return (
     <Layout>
-      <Box width="100%" display="flex" justifyContent="space-between" px={20}>
+      <Box width="100%" display="flex" justifyContent="space-between" px={20} mt="10">
         <Box>
           <Heading size="sm" color="gray.600" mb="2">
             Group:{" "}
@@ -174,7 +175,9 @@ const GroupPage = () => {
                     </Td>
 
                     <Td>
-                      {gu.scores[0]?.[0]}: {(gu.scores[0]?.[1] as any)?.toFixed(2)}%
+                      <Tag color="green">
+                        {gu.scores[0]?.[0]}: {(gu.scores[0]?.[1] as any)?.toFixed(2)}%
+                      </Tag>
                     </Td>
                   </Tr>
                 )

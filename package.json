@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "blitz dev",
     "build": "blitz build",
-    "start": "blitz start",
+    "start": "blitz start --port ${PORT-3000}",
     "db:studio": "blitz prisma studio",
     "db:seed": "blitz db seed",
     "db:migrate": "blitz prisma migrate dev",
