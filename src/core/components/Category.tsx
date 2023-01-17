@@ -27,9 +27,9 @@ export const Category = ({
         borderBottomLeftRadius={isLast ? "2xl" : ""}
         px={!isSelect ? "40px" : ""}
         minW="260px"
-        backgroundColor={isSelect ? `${color}.200` : "white"}
+        backgroundColor={isSelect ? `orange.200` : "white"}
       >
-        {isSelect && <ChevronRightIcon width="40px" height="40px" color={`${color}.600`} />}
+        {isSelect && <ChevronRightIcon width="40px" height="40px" color={`orange.600`} />}
         <CircularProgress />
         <Heading marginLeft={4} size="md">
           {name}

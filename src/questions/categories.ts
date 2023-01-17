@@ -15,5 +15,20 @@ export const categoriesColors = {
   General: "orange",
   Entertainment: "teal",
   SportsAndCelebrities: "purple",
-  Other: "red",
+  Other: "yellow",
+}
+export const categoriesImages = {
+  GeoHistoryPolitics: "/history.jpg",
+  General: "/general.jpg",
+  Entertainment: "/entertainment.jpeg",
+  SportsAndCelebrities: "/sport.jpg",
+  Other: "/other.jpg",
+}
+
+export const categoriesLabels = {
+  GeoHistoryPolitics: "Geo/History/Politics",
+  General: "General",
+  Entertainment: "Entertainment",
+  SportsAndCelebrities: "Sports/Celebrities",
+  Other: "Other",
 }

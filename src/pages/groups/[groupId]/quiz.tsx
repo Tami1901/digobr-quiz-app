@@ -12,14 +12,16 @@ import {
   VStack,
   Flex,
   Divider,
+  useDisclosure,
 } from "@chakra-ui/react"
 import { LinkButton } from "chakra-next-link"
 import router, { Router, useRouter } from "next/router"
 import { useEffect, useMemo, useState } from "react"
 import { Category } from "src/core/components/Category"
+import { ExplainModal } from "src/core/components/ExplainModal"
 import Layout from "src/core/layouts/Layout"
 import getQuestionsToSolve from "src/groups/queries/getQuestionsToSolve"
-import { categoriesColors } from "src/questions/categories"
+import { categoriesColors, categoriesImages, categoriesLabels } from "src/questions/categories"
 import explainAnswerFn from "src/questions/mutations/explainAnswer"
 import solveQuestionFn from "src/questions/mutations/solveQuestion"
 
@@ -37,13 +39,14 @@ const Quiz: BlitzPage = () => {
   const groupId = useParam("groupId", "number")!
   const [groupUser, { refetch }] = useQuery(getQuestionsToSolve, { groupId })
   const [index, setIndex] = useState(
-    groupUser.solutions.filter((sol) => sol.answerIndex !== null).length
+    groupUser.solutions.filter((sol) => sol.answerIndex !== null).length + 4
   )
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   const [userAnswer, setUserAnswer] = useState<undefined | number>(undefined)
   const [explanation, setExplanation] = useState<undefined | string>(undefined)
   const [solve] = useMutation(solveQuestionFn)
-  const [explain] = useMutation(explainAnswerFn)
+  const [explain, { isLoading }] = useMutation(explainAnswerFn)
 
   const solution = groupUser.solutions[index]
   const answers = useMemo(() => {
@@ -68,7 +71,6 @@ const Quiz: BlitzPage = () => {
     setUserAnswer(answerIndex)
     // await refetch()
 
-    // setExplanation(await explain({ answerIndex, questionId: solution!.id }))
     // if (index === questions.length - 1) {
     //   await router.push(`/`)
     // } else {
@@ -97,12 +99,14 @@ const Quiz: BlitzPage = () => {
     return undefined
   }
 
+  console.log(explanation)
+
   return (
     <Layout>
       <Box
         width="100%"
         display="flex"
-        backgroundImage="url('/art.png')"
+        backgroundImage={`url(${categoriesImages[solution.question.category]})`}
         backgroundSize="cover"
         backgroundRepeat="no-repeat"
         justifyContent="center"
@@ -124,8 +128,8 @@ const Quiz: BlitzPage = () => {
           {Object.entries(categoriesColors).map((c, i) => (
             <Category
               key={c[0]}
-              name={c[0]}
-              color={c[1]}
+              name={categoriesLabels[c[0]]}
+              // color={c[1]}
               isSelect={c[0] === solution.question.category}
               isFirst={i === 0}
               isLast={i === 4}
@@ -140,7 +144,7 @@ const Quiz: BlitzPage = () => {
           h="70vh"
           display="flex"
           flexDirection="column"
-          justifyContent="center"
+          justifyContent="space-around"
           alignItems="center"
           borderRadius="2xl"
           borderLeftRadius={0}
@@ -149,56 +153,53 @@ const Quiz: BlitzPage = () => {
           mr="10"
           position="relative"
         >
-          {/* <HStack mb={8} width="80%">
-            {questions.map((q) => (
-              <Box
-                w="4"
-                h="4"
-                borderRadius="50%"
-                bgColor={
-                  q.solutions.length === 0
-                    ? "gray.300"
-                    : q.solutions[0]?.answerIndex === 0
-                    ? "green"
-                    : "red"
-                }
-                key={q.id}
-              />
-            ))}
-          </HStack> */}
-
           <Heading maxW="80%" textAlign="center" size="xl" mb="10">
             <>
               {index + 1}. {solution.question.question}{" "}
             </>
           </Heading>
-          {[0, 1].map((i) => (
-            <HStack key={i} spacing="10" mb="10" w="100%" px={20}>
-              <Button
-                onClick={onSolve(answers[i * 2 + 0]!.index)}
-                py="10"
-                w="100%"
-                colorScheme={getColor(answers[i * 2 + 0]!.index)}
-                disabled={isAnswered}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              >
-                {answers[i * 2 + 0]!.text}
-              </Button>
-              <Button
-                onClick={onSolve(answers[i * 2 + 1]!.index)}
-                py="10"
-                w="100%"
-                colorScheme={getColor(answers[i * 2 + 1]!.index)}
-                disabled={isAnswered}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              >
-                {answers[i * 2 + 1]!.text}
-              </Button>
-            </HStack>
-          ))}
+          <Box w="100%">
+            {[0, 1].map((i) => (
+              <HStack key={i} spacing="10" mb="10" px={20}>
+                <Button
+                  onClick={onSolve(answers[i * 2 + 0]!.index)}
+                  py="10"
+                  w="100%"
+                  colorScheme={getColor(answers[i * 2 + 0]!.index)}
+                  disabled={isAnswered}
+                  _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                  position="relative"
+                >
+                  <Box position="absolute" left="4">
+                    {i === 0 ? `a)` : `c)`}
+                  </Box>
+                  {answers[i * 2 + 0]!.text}
+                </Button>
+                <Button
+                  onClick={onSolve(answers[i * 2 + 1]!.index)}
+                  py="10"
+                  w="100%"
+                  colorScheme={getColor(answers[i * 2 + 1]!.index)}
+                  disabled={isAnswered}
+                  _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                  position="relative"
+                >
+                  <Box position="absolute" left="4">
+                    {i === 0 ? `b)` : `d)`}
+                  </Box>
+                  {answers[i * 2 + 1]!.text}
+                </Button>
+              </HStack>
+            ))}
+          </Box>
           <Box px="20" display="flex" w="full" justifyContent="space-between">
             <Button
-              onClick={() => explain({ answerIndex: 0, questionId: 2 })}
+              onClick={async () => {
+                onOpen()
+                setExplanation(
+                  await explain({ answerIndex: userAnswer!, questionId: solution!.question.id })
+                )
+              }}
               colorScheme="yellow"
               disabled={!isAnswered}
               px="20"
@@ -209,9 +210,15 @@ const Quiz: BlitzPage = () => {
               Next
             </LinkButton>
           </Box>
-          <Box>{explanation}</Box>
         </Box>
       </Box>
+
+      <ExplainModal
+        isOpen={isOpen}
+        onClose={onClose}
+        explanation={explanation}
+        isLoading={isLoading}
+      />
     </Layout>
   )
 }
