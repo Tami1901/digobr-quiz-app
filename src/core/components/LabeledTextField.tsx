@@ -5,7 +5,7 @@ import { ErrorMessage } from "@hookform/error-message"
 export interface LabeledTextFieldProps extends PropsWithoutRef<JSX.IntrinsicElements["input"]> {
   /** Field name. */
   name: string
-  /** Field label. */
+  /** Field label. ghjkl; */
   label: string
   /** Field type. Doesn't include radio buttons and checkboxes */
   type?: "text" | "password" | "email" | "number"

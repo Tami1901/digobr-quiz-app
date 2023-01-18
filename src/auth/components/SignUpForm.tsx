@@ -12,7 +12,7 @@ import {
   ModalFooter,
 } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
-import { Form, FORM_ERROR } from "chakra-form"
+import { Form, FORM_ERROR, InputField } from "chakra-form"
 import { useRouter } from "next/router"
 import LabeledTextField from "src/core/components/LabeledTextField"
 import signup from "../mutations/signup"
@@ -31,7 +31,7 @@ export const SignUpForm = ({ modalProps }) => {
         <ModalHeader>Create account</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Box py="4" px="10" margin="0 auto" width="fit-content">
+          <Box py="4" px="8" width="100%">
             <Form
               schema={Signup}
               initialValues={{ name: "", email: "", password: "" }}
@@ -51,15 +51,10 @@ export const SignUpForm = ({ modalProps }) => {
                 }
               }}
             >
-              <LabeledTextField name="name" label="Name" placeholder="Name" />
-              <LabeledTextField name="email" label="Email" placeholder="Email" />
-              <LabeledTextField
-                name="password"
-                label="Password"
-                placeholder="Password"
-                type="password"
-              />
-              <Button type="submit" width="100%" colorScheme="blue" mt="6">
+              <InputField name="name" width="100%" />
+              <InputField name="email" />
+              <InputField name="password" mb="6" />
+              <Button type="submit" width="100%" colorScheme="blue">
                 Create Account
               </Button>
             </Form>
