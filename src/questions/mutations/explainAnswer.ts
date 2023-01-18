@@ -39,12 +39,14 @@ const explainAnswerFn = resolver.pipe(
     return (
       await openai.createCompletion({
         model: "text-davinci-003",
-        prompt: `Here is the question where we know that answer a is correct, user answered with ${
-          "abcd"[answerIndex]
-        }, explain why is it wrong and why is a correct
+        prompt: `Here is the question where we know that answer ${
+          question.ans1
+        } is correct, user answered with
+          ${question[`ans${answerIndex + 1}`]}
+        }, explain why is it wrong and why is ${question.ans1} correct
 
         ${question.question}
-        a) ${answers}
+        a) ${question.ans1}
         b) ${question.ans2}
         c) ${question.ans3}
         d) ${question.ans4}`,

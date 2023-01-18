@@ -30,7 +30,6 @@ export const Category = ({
         backgroundColor={isSelect ? `orange.200` : "white"}
       >
         {isSelect && <ChevronRightIcon width="40px" height="40px" color={`orange.600`} />}
-        <CircularProgress />
         <Heading marginLeft={4} size="md">
           {name}
         </Heading>
